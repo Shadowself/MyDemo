@@ -1,0 +1,123 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#fcfcfc"
+    android:orientation="vertical" >
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="#ff303537"
+        android:gravity="center_vertical"
+        >
+
+        <LinearLayout
+            android:id="@+id/title_ll"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:orientation="horizontal" >
+
+            <ImageView
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:layout_marginLeft="14dp"
+                android:layout_marginRight="2dp"
+                android:background="@drawable/home_logo" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="12dp"
+            android:layout_toRightOf="@+id/title_ll"
+            android:layout_centerVertical="true"
+            android:text="微信"
+            android:textColor="#ffffffff"
+            android:textSize="18dp" />
+        
+        <ImageView 
+            android:id="@+id/search"
+            android:layout_height="35dp"
+            android:layout_width="35dp"
+            android:layout_marginRight="15dp"
+            android:layout_centerVertical="true"
+            android:layout_toLeftOf="@+id/add"
+            android:src="@drawable/search_icon"/>
+        
+        <ImageView 
+            android:id="@+id/add"
+            android:layout_height="35dp"
+            android:layout_width="35dp"
+            android:layout_marginRight="15dp"
+            android:layout_centerVertical="true"
+            android:layout_toLeftOf="@+id/more"
+            android:src="@drawable/add_icon"/>
+        
+        <ImageView 
+            android:id="@+id/more"
+            android:layout_height="35dp"
+            android:layout_width="35dp"
+            android:onClick="openMoreMenu"
+            android:layout_marginRight="10dp"
+            android:layout_centerVertical="true"
+            android:layout_alignParentRight="true"
+            android:src="@drawable/more_icon"/>
+    </RelativeLayout>
+    
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="40dp"
+        android:paddingTop="5dp" >
+
+        <ImageView
+            android:id="@+id/top_image"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:background="@drawable/background_top" />
+
+        <LinearLayout
+            android:id="@+id/tab_bar"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:orientation="horizontal" >
+
+            <TextView
+                android:id="@+id/tv_liaotian"
+                android:clickable="true"
+                style="@style/TabItem"
+                android:text="@string/chat"
+                android:textColor="@color/text_color_selector" />
+
+            <TextView
+                android:id="@+id/tv_faxian"
+                 android:clickable="true"
+                style="@style/TabItem"
+                android:text="@string/find"
+                android:textColor="@color/text_color_selector" />
+
+            <TextView
+                android:id="@+id/tv_tongxunlu"
+                android:clickable="true"
+                style="@style/TabItem"
+                android:text="@string/contact"
+                android:textColor="@color/text_color_selector" />
+        </LinearLayout>
+    </RelativeLayout>
+
+    <ImageView
+        android:layout_width="fill_parent"
+        android:layout_height="1dp"
+        android:background="#D6D6D6" />
+
+    <android.support.v4.view.ViewPager
+        android:id="@+id/pager"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent" 
+        android:layout_weight="1">
+        
+    </android.support.v4.view.ViewPager>
+
+</LinearLayout>
