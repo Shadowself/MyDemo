@@ -5,6 +5,8 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Iterator;
+import java.util.List;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -14,6 +16,11 @@ import com.example.util.WebUtil;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -23,10 +30,11 @@ import android.widget.TextView;
 
 public class WeatherActivity extends Activity {
 
-	private TextView localweather;
+	private TextView localweather,location;
 	private MyHandler handler;
 	private JSONObject obj;
 	private Weather w;
+	LocationManager locMan;
 
 	@SuppressLint("HandlerLeak")
 	class MyHandler extends Handler {
@@ -56,8 +64,15 @@ public class WeatherActivity extends Activity {
 		setContentView(R.layout.activity_weather);
 
 		localweather = (TextView) findViewById(R.id.localweather);
+		location = (TextView) findViewById(R.id.location);
 		handler = new MyHandler();
 		w = new Weather();
+		
+		locMan = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+//		Location loc = locMan.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+		//定义当前的Location privider
+		locMan.requestLocationUpdates(LocationManager.GPS_PROVIDER, 600, 10,
+				new MyLocationListener());
 
 	}
 
@@ -110,7 +125,53 @@ public class WeatherActivity extends Activity {
 	public void showWeather(View v) {
 		GetWeather nt = new GetWeather();
 		nt.start();
+
+		//获取所有的  providers
+		List<String> providers = locMan.getAllProviders();
+		for(Iterator iterator = providers.iterator();iterator.hasNext() ;){
+			String pro = (String)iterator.next();
+			Log.i("provider",""+pro);
+		}
+		
 	}
+	
+	public void bestprovider(View v){
+		//生成一个 Criteria对象
+		Criteria criteria = new Criteria();
+		//设置查询条件
+//		criteria.setAccuracy(criteria.ACCURACY_FINE);  //设置经度
+		criteria.setPowerRequirement(criteria.POWER_LOW);  //电量
+		
+		criteria.setAltitudeRequired(false);  //不需要海拔
+		criteria.setSpeedRequired(false);     //不需要速度
+		criteria.setCostAllowed(false);       //不产生费用
+		//false 表明不管privoder是否打开，如果是true 则在已经打开的provider中查找
+		String provider = locMan.getBestProvider(criteria, false);
+		
+		Log.i("BestProvider","" + provider);
+	}
+	
+	public class MyLocationListener implements LocationListener {
+		    @Override
+		    public void onLocationChanged(Location loc) {
+		        if (loc != null) {
+		        	location.setText(""+ loc.getLatitude() + "   " +  loc.getLongitude());
+		        	Log.i("tag",""+ loc.getLatitude() + "   " +  loc.getLongitude());
+		        }
+		    }
+		  
+		   @Override
+		    public void onProviderDisabled(String provider) {
+		    }
+		  
+		    @Override
+		    public void onProviderEnabled(String provider) {
+		    }
+		  
+		    @Override
+		    public void onStatusChanged(String provider, int status, Bundle extras) {
+		    }
+		}
 
 	public void json(String json) {
 		try {

@@ -10,6 +10,12 @@
         android:onClick="showWeather"
         android:text="查看天气"/>
     
+    <Button 
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="bestprovider"
+        android:text="获取最优provider"/>
+    
     <ScrollView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -20,5 +26,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
     </ScrollView>
+    
+    <TextView
+            android:id="@+id/location"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
 
 </LinearLayout>
