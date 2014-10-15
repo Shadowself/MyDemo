@@ -7,6 +7,8 @@ public class Weather {
 	
 	private String lowtemp;
 	private String weather;
+	private String wind;
+	private String windfl;
 	
 	private String gxtime;
 
@@ -56,6 +58,22 @@ public class Weather {
 
 	public void setGxtime(String gxtime) {
 		this.gxtime = gxtime;
+	}
+
+	public String getWind() {
+		return wind;
+	}
+
+	public void setWind(String wind) {
+		this.wind = wind;
+	}
+
+	public String getWindfl() {
+		return windfl;
+	}
+
+	public void setWindfl(String windfl) {
+		this.windfl = windfl;
 	}
 	
 
