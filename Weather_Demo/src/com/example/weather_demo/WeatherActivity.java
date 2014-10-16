@@ -5,19 +5,12 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Iterator;
-import java.util.List;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.Context;
-import android.location.Criteria;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -26,17 +19,30 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.baidu.location.BDLocation;
+import com.baidu.location.BDLocationListener;
+import com.baidu.location.LocationClient;
+import com.baidu.location.LocationClientOption;
+import com.baidu.mapapi.search.geocode.GeoCodeResult;
+import com.baidu.mapapi.search.geocode.OnGetGeoCoderResultListener;
+import com.baidu.mapapi.search.geocode.ReverseGeoCodeResult;
 import com.example.util.CityId;
 import com.example.util.Weather;
 import com.example.util.WebUtil;
+import com.example.util.isInterent;
 
-public class WeatherActivity extends Activity {
+public class WeatherActivity extends Activity implements
+		OnGetGeoCoderResultListener {
 
-	private TextView localweather, location;
+	// 定位相关
+	public LocationClient mLocationClient = null;
+	public BDLocationListener myListener = new MyLocationListener();
+
+	private TextView localweather, locationplace;
 	private MyHandler handler;
 	private JSONObject obj;
-	private Weather w;
-	LocationManager locMan;
+
+	// LocationManager locMan;
 
 	@SuppressLint("HandlerLeak")
 	class MyHandler extends Handler {
@@ -65,16 +71,62 @@ public class WeatherActivity extends Activity {
 		setContentView(R.layout.activity_weather);
 
 		localweather = (TextView) findViewById(R.id.localweather);
-		location = (TextView) findViewById(R.id.location);
+		locationplace = (TextView) findViewById(R.id.location);
 		handler = new MyHandler();
-		w = new Weather();
 
-		locMan = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-		// Location loc =
-		// locMan.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-		// 定义当前的Location privider
-		locMan.requestLocationUpdates(LocationManager.GPS_PROVIDER, 600, 10,
-				new MyLocationListener());
+		mLocationClient = new LocationClient(getApplicationContext()); // 声明LocationClient类
+		mLocationClient.registerLocationListener(myListener); // 注册监听函数
+
+		LocationClientOption option = new LocationClientOption();
+		option.setOpenGps(true);// 打开gps
+		option.setCoorType("bd09ll");// 返回的定位结果是百度经纬度,默认值gcj02
+		// option.setScanSpan(5000);//设置发起定位请求的间隔时间为5000ms
+		option.setIsNeedAddress(true);// 返回的定位结果包含地址信息
+		option.setNeedDeviceDirect(true);// 返回的定位结果包含手机机头的方向
+		option.setLocationMode(com.baidu.location.LocationClientOption.LocationMode.Hight_Accuracy);// 设置定位模式
+		option.setProdName(getPackageName());
+		mLocationClient.setLocOption(option);
+		if (isInterent.hasInternet(this)) {
+			mLocationClient.start();
+
+		} else {
+			Toast.makeText(getApplicationContext(), "网络异常，请检查网络是否连接",
+					Toast.LENGTH_LONG).show();
+		}
+	}
+
+	public class MyLocationListener implements BDLocationListener {
+		@Override
+		public void onReceiveLocation(BDLocation location) {
+			if (location == null)
+				return;
+			StringBuffer sb = new StringBuffer(256);
+			sb.append("time : ");
+			sb.append(location.getTime());
+			sb.append("\nerror code : ");
+			sb.append(location.getLocType());
+			sb.append("\nlatitude : ");
+			sb.append(location.getLatitude());
+			sb.append("\nlontitude : ");
+			sb.append(location.getLongitude());
+			sb.append("\nradius : ");
+			sb.append(location.getRadius());
+			if (location.getLocType() == BDLocation.TypeGpsLocation) {
+				sb.append("\nspeed : ");
+				sb.append(location.getSpeed());
+				sb.append("\nsatellite : ");
+				sb.append(location.getSatelliteNumber());
+			} else if (location.getLocType() == BDLocation.TypeNetWorkLocation) {
+				sb.append("\naddr : ");
+				sb.append(location.getAddrStr());
+			}
+
+			String place = location.getAddrStr();
+			locationplace.setText(location.getProvince()+location.getCity() );
+
+			Toast.makeText(getApplicationContext(), "" + place, 1).show();
+			Log.i("", sb.toString() + place);
+		}
 
 	}
 
@@ -100,11 +152,9 @@ public class WeatherActivity extends Activity {
 
 	class GetWeather extends Thread {
 		private URL url;
-		private String isloacal;
 
-		public GetWeather(URL url, String isloacal) {
+		public GetWeather(URL url) {
 			this.url = url;
-			this.isloacal = isloacal;
 		}
 
 		@Override
@@ -112,18 +162,12 @@ public class WeatherActivity extends Activity {
 			HttpURLConnection conn = null; // 连接对象
 			String resultData = getResault(conn, url);
 
-			// url = new URL("http://m.weather.com.cn/data/101180101.html");
-
 			Log.i("天气", resultData);
 			String resultmsg = null;
 			if (json(resultData) != null) {
 				resultmsg = json(resultData);
 				Message msg = new Message();
-				if (isloacal.endsWith("0")) {
-					msg.what = 1;
-				} else {
-					msg.what = 2;
-				}
+				msg.what = 1;
 				msg.obj = resultmsg;
 				handler.sendMessage(msg);
 			} else {
@@ -151,11 +195,9 @@ public class WeatherActivity extends Activity {
 			}
 
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} // 使用URL打开一个链接
 		catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -164,68 +206,38 @@ public class WeatherActivity extends Activity {
 
 	public void showWeather(View v) {
 
-		URL url1, url2;
+		URL url1;
+		if (isInterent.hasInternet(this)) {
 
-		try {
-			url1 = new URL(String.format(getString(R.string.weatherurl)
-					+ "?cityCode=%1$s&weatherType=0", getCityIdByName("郑州")));
-			
-			GetWeather nt = new GetWeather(url1, "0");
-			nt.start();
-		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+			try {
+				url1 = new URL(
+						String.format(getString(R.string.weatherurl)
+								+ "?cityCode=%1$s&weatherType=0",
+								getCityIdByName("郑州")));
 
-
-
-		// 获取所有的 providers
-		List<String> providers = locMan.getAllProviders();
-		for (Iterator iterator = providers.iterator(); iterator.hasNext();) {
-			String pro = (String) iterator.next();
-			Log.i("provider", "" + pro);
-		}
-
-	}
-
-	public void bestprovider(View v) {
-		// 生成一个 Criteria对象
-		Criteria criteria = new Criteria();
-		// 设置查询条件
-		// criteria.setAccuracy(criteria.ACCURACY_FINE); //设置经度
-		criteria.setPowerRequirement(criteria.POWER_LOW); // 电量
-
-		criteria.setAltitudeRequired(false); // 不需要海拔
-		criteria.setSpeedRequired(false); // 不需要速度
-		criteria.setCostAllowed(false); // 不产生费用
-		// false 表明不管privoder是否打开，如果是true 则在已经打开的provider中查找
-		String provider = locMan.getBestProvider(criteria, false);
-
-		Log.i("BestProvider", "" + provider);
-	}
-
-	public class MyLocationListener implements LocationListener {
-		@Override
-		public void onLocationChanged(Location loc) {
-			if (loc != null) {
-				location.setText("" + loc.getLatitude() + "   "
-						+ loc.getLongitude());
-				Log.i("tag",
-						"" + loc.getLatitude() + "   " + loc.getLongitude());
+				GetWeather nt = new GetWeather(url1);
+				nt.start();
+			} catch (MalformedURLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
+		} else {
+			Toast.makeText(getApplicationContext(), "网络异常，请检查网络是否连接",
+					Toast.LENGTH_LONG).show();
+
 		}
 
-		@Override
-		public void onProviderDisabled(String provider) {
+	}
+
+	public void getLocationplace(View v) {
+		if (isInterent.hasInternet(this)) {
+			mLocationClient.requestLocation();
+		} else {
+			Toast.makeText(getApplicationContext(), "网络异常，请检查网络是否连接",
+					Toast.LENGTH_LONG).show();
+
 		}
 
-		@Override
-		public void onProviderEnabled(String provider) {
-		}
-
-		@Override
-		public void onStatusChanged(String provider, int status, Bundle extras) {
-		}
 	}
 
 	public String json(String json) {
@@ -239,16 +251,34 @@ public class WeatherActivity extends Activity {
 			weather.setWeather(contentObject.getString("weather1"));
 			weather.setWind(contentObject.getString("wind1"));
 			weather.setWindfl(contentObject.getString("fl1"));
-			
-			jsonresult = weather.getCity() + ":  "
-			+ weather.getToptemp() + "\n天气：" + weather.getWeather()
-			+ "   " + weather.getWind() +":" + weather.getWindfl();
+
+			jsonresult = weather.getCity() + ":  " + weather.getToptemp()
+					+ "\n天气：" + weather.getWeather() + "   "
+					+ weather.getWind() + ":" + weather.getWindfl();
 		} catch (JSONException e) {
 			Log.i("Tag", "解析json失败");
 			e.printStackTrace();
 		}
 		weather = null;
 		return jsonresult;
+	}
+
+	@Override
+	public void onGetGeoCodeResult(GeoCodeResult arg0) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onGetReverseGeoCodeResult(ReverseGeoCodeResult arg0) {
+		// TODO Auto-generated method stub
+
+	}
+
+	protected void onDestroy() {
+		// 退出时销毁定位
+		mLocationClient.stop();
+		super.onDestroy();
 	}
 
 }
