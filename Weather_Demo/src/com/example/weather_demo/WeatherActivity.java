@@ -23,16 +23,12 @@ import com.baidu.location.BDLocation;
 import com.baidu.location.BDLocationListener;
 import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
-import com.baidu.mapapi.search.geocode.GeoCodeResult;
-import com.baidu.mapapi.search.geocode.OnGetGeoCoderResultListener;
-import com.baidu.mapapi.search.geocode.ReverseGeoCodeResult;
 import com.example.util.CityId;
 import com.example.util.Weather;
 import com.example.util.WebUtil;
 import com.example.util.isInterent;
 
-public class WeatherActivity extends Activity implements
-		OnGetGeoCoderResultListener {
+public class WeatherActivity extends Activity{
 
 	// 定位相关
 	public LocationClient mLocationClient = null;
@@ -41,8 +37,7 @@ public class WeatherActivity extends Activity implements
 	private TextView localweather, locationplace;
 	private MyHandler handler;
 	private JSONObject obj;
-
-	// LocationManager locMan;
+	private String City;
 
 	@SuppressLint("HandlerLeak")
 	class MyHandler extends Handler {
@@ -94,7 +89,48 @@ public class WeatherActivity extends Activity implements
 					Toast.LENGTH_LONG).show();
 		}
 	}
+	
+	//获取当前位置天气
+	public void showWeather(View v) {
 
+		URL url1;
+		if (isInterent.hasInternet(this)) {
+
+			String city = locationplace.getText().toString().trim();
+			if(city.contains("市") || city.contains("省")){
+				City = city.substring(0, city.length()-1);
+			}
+
+			try {
+				url1 = new URL(
+						String.format(getString(R.string.weatherurl)
+								+ "?cityCode=%1$s&weatherType=0",
+								getCityIdByName(City)));
+
+				GetWeather nt = new GetWeather(url1);
+				nt.start();
+			} catch (MalformedURLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} else {
+			Toast.makeText(getApplicationContext(), "网络异常，请检查网络是否连接",
+					Toast.LENGTH_LONG).show();
+		}
+
+	}
+
+	//重新定位
+	public void getLocationplace(View v) {
+		if (isInterent.hasInternet(this)) {
+			mLocationClient.requestLocation();
+		} else {
+			Toast.makeText(getApplicationContext(), "网络异常，请检查网络是否连接",
+					Toast.LENGTH_LONG).show();
+		}
+	}
+
+	//定位
 	public class MyLocationListener implements BDLocationListener {
 		@Override
 		public void onReceiveLocation(BDLocation location) {
@@ -178,6 +214,7 @@ public class WeatherActivity extends Activity implements
 
 	}
 
+	//获取天气json数据
 	public String getResault(HttpURLConnection conn, URL url) {
 		InputStream is = null;
 		String resultData = "";
@@ -204,48 +241,7 @@ public class WeatherActivity extends Activity implements
 		return resultData;
 	}
 
-	public void showWeather(View v) {
-
-		URL url1;
-		if (isInterent.hasInternet(this)) {
-
-			String city = locationplace.getText().toString().trim();
-			if(city.contains("市") || city.contains("省")){
-				String c = city.substring(0, city.length()-1);
-				Toast.makeText(getApplicationContext(), c, 1).show();
-			}
-
-			try {
-				url1 = new URL(
-						String.format(getString(R.string.weatherurl)
-								+ "?cityCode=%1$s&weatherType=0",
-								getCityIdByName("郑州")));
-
-				GetWeather nt = new GetWeather(url1);
-				nt.start();
-			} catch (MalformedURLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		} else {
-			Toast.makeText(getApplicationContext(), "网络异常，请检查网络是否连接",
-					Toast.LENGTH_LONG).show();
-
-		}
-
-	}
-
-	public void getLocationplace(View v) {
-		if (isInterent.hasInternet(this)) {
-			mLocationClient.requestLocation();
-		} else {
-			Toast.makeText(getApplicationContext(), "网络异常，请检查网络是否连接",
-					Toast.LENGTH_LONG).show();
-
-		}
-
-	}
-
+	//解析json数据
 	public String json(String json) {
 		String jsonresult = null;
 		Weather weather = new Weather();
@@ -267,18 +263,6 @@ public class WeatherActivity extends Activity implements
 		}
 		weather = null;
 		return jsonresult;
-	}
-
-	@Override
-	public void onGetGeoCodeResult(GeoCodeResult arg0) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void onGetReverseGeoCodeResult(ReverseGeoCodeResult arg0) {
-		// TODO Auto-generated method stub
-
 	}
 
 	protected void onDestroy() {
