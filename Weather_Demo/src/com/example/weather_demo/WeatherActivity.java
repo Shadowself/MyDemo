@@ -9,6 +9,9 @@ import org.json.JSONObject;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -17,13 +20,12 @@ import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.baidu.location.BDLocation;
 import com.baidu.location.BDLocationListener;
 import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
-import com.example.util.CityId;
 import com.example.util.HttpUtil;
+import com.example.util.LocalCity;
 import com.example.util.Weather;
 import com.example.util.isInterent;
 
@@ -38,6 +40,7 @@ public class WeatherActivity extends Activity {
 	private MyHandler handler;
 	private JSONObject obj;
 	private String City;
+	LocalCity localcity;
 
 	@SuppressLint("HandlerLeak")
 	class MyHandler extends Handler {
@@ -71,10 +74,11 @@ public class WeatherActivity extends Activity {
 		setContentView(R.layout.activity_weather);
 
 		localweather = (TextView) findViewById(R.id.localweather);
-		locationplace = (TextView) findViewById(R.id.location);
+//		locationplace = (TextView) findViewById(R.id.location);
 		nowweather = (TextView) findViewById(R.id.nowweather);
 
 		handler = new MyHandler();
+		localcity = new LocalCity();
 
 		mLocationClient = new LocationClient(getApplicationContext()); // 声明LocationClient类
 		mLocationClient.registerLocationListener(myListener); // 注册监听函数
@@ -90,7 +94,6 @@ public class WeatherActivity extends Activity {
 		mLocationClient.setLocOption(option);
 		if (isInterent.hasInternet(this)) {
 			mLocationClient.start();
-
 		} else {
 			Toast.makeText(getApplicationContext(), "网络异常，请检查网络是否连接",
 					Toast.LENGTH_LONG).show();
@@ -100,11 +103,15 @@ public class WeatherActivity extends Activity {
 	// 获取当前位置天气
 	public void showWeather(View v) {
 
+		GetFirstWeather();
+	}
+	
+	public void GetFirstWeather(){
 		URL url1, url2;
 		if (isInterent.hasInternet(this)) {
-
-			String city = locationplace.getText().toString().trim();
-			if (city.contains("市") || city.contains("省")) {
+			mLocationClient.requestLocation();
+			String city = localcity.getCity();
+			if (city.contains("市") || city.contains("省")) { 
 				City = city.substring(0, city.length() - 1);
 			}
 
@@ -112,7 +119,7 @@ public class WeatherActivity extends Activity {
 				url1 = new URL(
 						String.format(getString(R.string.weatherurl)
 								+ "?cityCode=%1$s&weatherType=0",
-								CityId.getCityIdByName(City)));
+								LocalCity.getCityIdByName(City)));
 
 				GetWeather nt = new GetWeather(url1, "0");
 				nt.start();
@@ -120,7 +127,7 @@ public class WeatherActivity extends Activity {
 				url2 = new URL(
 						String.format(getString(R.string.weatherurl)
 								+ "?cityCode=%1$s&weatherType=1",
-								CityId.getCityIdByName(City)));
+								LocalCity.getCityIdByName(City)));
 
 				GetWeather nt1 = new GetWeather(url2, "1");
 				nt1.start();
@@ -129,16 +136,6 @@ public class WeatherActivity extends Activity {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		} else {
-			Toast.makeText(getApplicationContext(), "网络异常，请检查网络是否连接",
-					Toast.LENGTH_LONG).show();
-		}
-	}
-
-	// 重新定位
-	public void getLocationplace(View v) {
-		if (isInterent.hasInternet(this)) {
-			mLocationClient.requestLocation();
 		} else {
 			Toast.makeText(getApplicationContext(), "网络异常，请检查网络是否连接",
 					Toast.LENGTH_LONG).show();
@@ -173,7 +170,8 @@ public class WeatherActivity extends Activity {
 			}
 
 			String place = location.getAddrStr();
-			locationplace.setText(location.getCity());
+//			locationplace.setText(location.getCity());
+			localcity.setCity(location.getCity());
 
 			Toast.makeText(getApplicationContext(), "" + place, 1).show();
 		}
