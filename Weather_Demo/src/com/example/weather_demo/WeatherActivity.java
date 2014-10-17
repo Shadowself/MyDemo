@@ -13,6 +13,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
@@ -28,13 +29,14 @@ import com.example.util.Weather;
 import com.example.util.WebUtil;
 import com.example.util.isInterent;
 
-public class WeatherActivity extends Activity{
+public class WeatherActivity extends Activity {
 
 	// 定位相关
 	public LocationClient mLocationClient = null;
 	public BDLocationListener myListener = new MyLocationListener();
 
 	private TextView localweather, locationplace;
+	private TextView nowweather;
 	private MyHandler handler;
 	private JSONObject obj;
 	private String City;
@@ -50,6 +52,11 @@ public class WeatherActivity extends Activity{
 				String result = (String) msg.obj;
 
 				localweather.setText(result);
+				break;
+			case 2:
+				String result1 = (String) msg.obj;
+
+				nowweather.setText(result1);
 				break;
 
 			default:
@@ -67,6 +74,8 @@ public class WeatherActivity extends Activity{
 
 		localweather = (TextView) findViewById(R.id.localweather);
 		locationplace = (TextView) findViewById(R.id.location);
+		nowweather = (TextView) findViewById(R.id.nowweather);
+
 		handler = new MyHandler();
 
 		mLocationClient = new LocationClient(getApplicationContext()); // 声明LocationClient类
@@ -89,16 +98,16 @@ public class WeatherActivity extends Activity{
 					Toast.LENGTH_LONG).show();
 		}
 	}
-	
-	//获取当前位置天气
+
+	// 获取当前位置天气
 	public void showWeather(View v) {
 
-		URL url1;
+		URL url1, url2;
 		if (isInterent.hasInternet(this)) {
 
 			String city = locationplace.getText().toString().trim();
-			if(city.contains("市") || city.contains("省")){
-				City = city.substring(0, city.length()-1);
+			if (city.contains("市") || city.contains("省")) {
+				City = city.substring(0, city.length() - 1);
 			}
 
 			try {
@@ -107,8 +116,17 @@ public class WeatherActivity extends Activity{
 								+ "?cityCode=%1$s&weatherType=0",
 								getCityIdByName(City)));
 
-				GetWeather nt = new GetWeather(url1);
+				GetWeather nt = new GetWeather(url1, "0");
 				nt.start();
+
+				url2 = new URL(
+						String.format(getString(R.string.weatherurl)
+								+ "?cityCode=%1$s&weatherType=1",
+								getCityIdByName(City)));
+
+				GetWeather nt1 = new GetWeather(url2, "1");
+				nt1.start();
+
 			} catch (MalformedURLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -120,7 +138,7 @@ public class WeatherActivity extends Activity{
 
 	}
 
-	//重新定位
+	// 重新定位
 	public void getLocationplace(View v) {
 		if (isInterent.hasInternet(this)) {
 			mLocationClient.requestLocation();
@@ -130,7 +148,7 @@ public class WeatherActivity extends Activity{
 		}
 	}
 
-	//定位
+	// 定位
 	public class MyLocationListener implements BDLocationListener {
 		@Override
 		public void onReceiveLocation(BDLocation location) {
@@ -188,9 +206,11 @@ public class WeatherActivity extends Activity{
 
 	class GetWeather extends Thread {
 		private URL url;
+		private String IsNow;
 
-		public GetWeather(URL url) {
+		public GetWeather(URL url, String IsNow) {
 			this.url = url;
+			this.IsNow = IsNow;
 		}
 
 		@Override
@@ -200,21 +220,28 @@ public class WeatherActivity extends Activity{
 
 			Log.i("天气", resultData);
 			String resultmsg = null;
-			if (json(resultData) != null) {
-				resultmsg = json(resultData);
+
+			Looper.prepare();
+			if (IsNow.equals("0")) {
 				Message msg = new Message();
+				resultmsg = json(resultData);
 				msg.what = 1;
 				msg.obj = resultmsg;
 				handler.sendMessage(msg);
 			} else {
-				Toast.makeText(getApplicationContext(), "json数据解析失败", 1).show();
+				Message msg1 = new Message();
+				resultmsg = json1(resultData);
+				msg1.what = 2;
+				msg1.obj = resultmsg;
+				handler.sendMessage(msg1);
 			}
+			Looper.loop();
 
 		}
 
 	}
 
-	//获取天气json数据
+	// 获取天气json数据
 	public String getResault(HttpURLConnection conn, URL url) {
 		InputStream is = null;
 		String resultData = "";
@@ -241,7 +268,7 @@ public class WeatherActivity extends Activity{
 		return resultData;
 	}
 
-	//解析json数据
+	// 解析json数据
 	public String json(String json) {
 		String jsonresult = null;
 		Weather weather = new Weather();
@@ -255,8 +282,30 @@ public class WeatherActivity extends Activity{
 			weather.setWindfl(contentObject.getString("fl1"));
 
 			jsonresult = weather.getCity() + ":  " + weather.getToptemp()
-					+ "\n天气：" + weather.getWeather() + "   "
-					+ weather.getWind() + ":" + weather.getWindfl();
+					+ "\n天气：" + weather.getWeather() + "   ";
+		} catch (JSONException e) {
+			Log.i("Tag", "解析json失败");
+			e.printStackTrace();
+		}
+		weather = null;
+		return jsonresult;
+	}
+
+	// 解析json数据
+	public String json1(String json) {
+		String jsonresult = null;
+		Weather weather = new Weather();
+		try {
+			obj = new JSONObject(json);
+			JSONObject contentObject = obj.getJSONObject("weatherinfo");
+			weather.setToptemp(contentObject.getString("temp"));
+			weather.setWind(contentObject.getString("WD"));
+			weather.setWindfl(contentObject.getString("WS"));
+			weather.setGxtime(contentObject.getString("time"));
+
+			jsonresult = "当前温度：" + weather.getToptemp() + "  风向：  "
+					+ weather.getWind() + "：" + weather.getWindfl() + "  "
+					+ weather.getGxtime() + "发布";
 		} catch (JSONException e) {
 			Log.i("Tag", "解析json失败");
 			e.printStackTrace();
