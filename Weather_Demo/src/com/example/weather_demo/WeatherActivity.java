@@ -1,7 +1,5 @@
 package com.example.weather_demo;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -25,8 +23,8 @@ import com.baidu.location.BDLocationListener;
 import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
 import com.example.util.CityId;
+import com.example.util.HttpUtil;
 import com.example.util.Weather;
-import com.example.util.WebUtil;
 import com.example.util.isInterent;
 
 public class WeatherActivity extends Activity {
@@ -114,7 +112,7 @@ public class WeatherActivity extends Activity {
 				url1 = new URL(
 						String.format(getString(R.string.weatherurl)
 								+ "?cityCode=%1$s&weatherType=0",
-								getCityIdByName(City)));
+								CityId.getCityIdByName(City)));
 
 				GetWeather nt = new GetWeather(url1, "0");
 				nt.start();
@@ -122,7 +120,7 @@ public class WeatherActivity extends Activity {
 				url2 = new URL(
 						String.format(getString(R.string.weatherurl)
 								+ "?cityCode=%1$s&weatherType=1",
-								getCityIdByName(City)));
+								CityId.getCityIdByName(City)));
 
 				GetWeather nt1 = new GetWeather(url2, "1");
 				nt1.start();
@@ -135,7 +133,6 @@ public class WeatherActivity extends Activity {
 			Toast.makeText(getApplicationContext(), "网络异常，请检查网络是否连接",
 					Toast.LENGTH_LONG).show();
 		}
-
 	}
 
 	// 重新定位
@@ -179,30 +176,11 @@ public class WeatherActivity extends Activity {
 			locationplace.setText(location.getCity());
 
 			Toast.makeText(getApplicationContext(), "" + place, 1).show();
-			Log.i("", sb.toString() + place);
 		}
 
 	}
 
-	/**
-	 * 通过城市的名称获取对应的城市id，如果不存在则返回 null
-	 * 
-	 * @param name
-	 *            城市名称
-	 * @return cityid
-	 * */
-	public static String getCityIdByName(String name) {
-		String cityId = null;
-
-		int startIndex = CityId.cityIds.indexOf(name) + name.length() + 1;// 开始截取的位置
-		if (startIndex == -1) {
-			return null;
-		}
-
-		cityId = CityId.cityIds.trim().substring(startIndex, startIndex + 9);
-
-		return cityId;
-	}
+	
 
 	class GetWeather extends Thread {
 		private URL url;
@@ -216,7 +194,7 @@ public class WeatherActivity extends Activity {
 		@Override
 		public void run() {
 			HttpURLConnection conn = null; // 连接对象
-			String resultData = getResault(conn, url);
+			String resultData = HttpUtil.getResault(conn, url);
 
 			Log.i("天气", resultData);
 			String resultmsg = null;
@@ -241,34 +219,7 @@ public class WeatherActivity extends Activity {
 
 	}
 
-	// 获取天气json数据
-	public String getResault(HttpURLConnection conn, URL url) {
-		InputStream is = null;
-		String resultData = "";
-		try {
-			conn = (HttpURLConnection) url.openConnection();
-			conn.setRequestMethod("GET");
-			conn.setConnectTimeout(5000);
-			conn.setRequestProperty("Connection", "keep-alive");
-			conn.setRequestProperty("Content-Type", "text/html; charset=utf-8");
-			conn.setRequestProperty("User-Agent",
-					"Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.2; WOW64; Trident/6.0)");
-			if (conn.getResponseCode() == 200) {
-				is = conn.getInputStream();
-				resultData = WebUtil.getStr(is);
-			}
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		} // 使用URL打开一个链接
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return resultData;
-	}
-
-	// 解析json数据
+	// 解析天气的json数据
 	public String json(String json) {
 		String jsonresult = null;
 		Weather weather = new Weather();
@@ -291,7 +242,7 @@ public class WeatherActivity extends Activity {
 		return jsonresult;
 	}
 
-	// 解析json数据
+	// 解析实时天气的json数据
 	public String json1(String json) {
 		String jsonresult = null;
 		Weather weather = new Weather();
@@ -303,8 +254,8 @@ public class WeatherActivity extends Activity {
 			weather.setWindfl(contentObject.getString("WS"));
 			weather.setGxtime(contentObject.getString("time"));
 
-			jsonresult = "当前温度：" + weather.getToptemp() + "  风向：  "
-					+ weather.getWind() + "：" + weather.getWindfl() + "  "
+			jsonresult = "当前温度：" + weather.getToptemp() + "  风向风力：  "
+					+ weather.getWind() + weather.getWindfl() + "  "
 					+ weather.getGxtime() + "发布";
 		} catch (JSONException e) {
 			Log.i("Tag", "解析json失败");
