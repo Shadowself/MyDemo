@@ -4,5 +4,6 @@
     <string name="app_name">Weather_Demo</string>
     <string name="action_settings">Settings</string>
     <string name="hello_world">Hello world!</string>
-        <string name="weatherurl">http://weather.51wnl.com/weatherinfo/GetMoreWeather</string>
+    <string name="weatherurl">http://weather.51wnl.com/weatherinfo/GetMoreWeather</string>
+
 </resources>
