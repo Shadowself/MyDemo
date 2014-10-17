@@ -3,38 +3,23 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical" >
-
-    <Button
+    <TextView
+        android:id="@+id/localweather"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:onClick="showWeather"
-        android:text="查看天气" />
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:onClick="getLocationplace"
-        android:text="定位" />
-
-    <ScrollView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:scrollbars="none" >
-
-        <TextView
-            android:id="@+id/localweather"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-    </ScrollView>
+        android:textSize="16sp" />
 
     <TextView
         android:id="@+id/nowweather"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:textSize="16sp" />
 
-    <TextView
-        android:id="@+id/location"
+    <Button
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:onClick="showWeather"
+        android:text="查看天气" />
 
 </LinearLayout>
