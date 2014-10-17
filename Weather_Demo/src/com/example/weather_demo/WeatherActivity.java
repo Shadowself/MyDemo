@@ -122,7 +122,7 @@ public class WeatherActivity extends Activity implements
 			}
 
 			String place = location.getAddrStr();
-			locationplace.setText(location.getProvince()+location.getCity() );
+			locationplace.setText(location.getCity());
 
 			Toast.makeText(getApplicationContext(), "" + place, 1).show();
 			Log.i("", sb.toString() + place);
@@ -208,6 +208,12 @@ public class WeatherActivity extends Activity implements
 
 		URL url1;
 		if (isInterent.hasInternet(this)) {
+
+			String city = locationplace.getText().toString().trim();
+			if(city.contains("ÊÐ") || city.contains("Ê¡")){
+				String c = city.substring(0, city.length()-1);
+				Toast.makeText(getApplicationContext(), c, 1).show();
+			}
 
 			try {
 				url1 = new URL(
