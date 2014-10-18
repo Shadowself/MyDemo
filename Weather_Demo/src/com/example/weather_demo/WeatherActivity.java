@@ -9,9 +9,6 @@ import org.json.JSONObject;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -20,6 +17,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import com.baidu.location.BDLocation;
 import com.baidu.location.BDLocationListener;
 import com.baidu.location.LocationClient;
@@ -227,11 +225,12 @@ public class WeatherActivity extends Activity {
 			weather.setCity(contentObject.getString("city"));
 			weather.setToptemp(contentObject.getString("temp1"));
 			weather.setWeather(contentObject.getString("weather1"));
-			weather.setWind(contentObject.getString("wind1"));
-			weather.setWindfl(contentObject.getString("fl1"));
+			weather.setIndex(contentObject.getString("index"));
+			weather.setIndex_d(contentObject.getString("index_d"));
 
 			jsonresult = weather.getCity() + ":  " + weather.getToptemp()
-					+ "\n天气：" + weather.getWeather() + "   ";
+					+ "\n天气：" + weather.getWeather() + "   "
+					+"\n穿衣指数：" + weather.getIndex() + "\n" + weather.getIndex_d();
 		} catch (JSONException e) {
 			Log.i("Tag", "解析json失败");
 			e.printStackTrace();
