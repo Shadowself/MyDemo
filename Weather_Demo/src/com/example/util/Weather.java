@@ -6,11 +6,13 @@ public class Weather {
 	private String toptemp;
 	
 	private String lowtemp;
-	private String weather;
-	private String wind;
-	private String windfl;
+	private String weather;  //天气
+	private String wind;     //风向
+	private String windfl;   //风力
 	
 	private String gxtime;
+	private String index;   //穿衣指数
+	private String index_d; //穿衣建议
 
 	public String getCity() {
 		return city;
@@ -74,6 +76,22 @@ public class Weather {
 
 	public void setWindfl(String windfl) {
 		this.windfl = windfl;
+	}
+
+	public String getIndex() {
+		return index;
+	}
+
+	public void setIndex(String index) {
+		this.index = index;
+	}
+
+	public String getIndex_d() {
+		return index_d;
+	}
+
+	public void setIndex_d(String index_d) {
+		this.index_d = index_d;
 	}
 	
 
